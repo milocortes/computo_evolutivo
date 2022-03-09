@@ -35,3 +35,91 @@ function OBJFUN(f,feno)
     return f.(feno)
 
 end
+
+# Función que genera la aptitud de los individuos
+function APTITUD(objv,operacion)
+
+    val_max = maximum(objv)
+    val_min = minimum(objv)
+
+    if operacion == "min"
+        objv_norm = [(((i-val_min)/(val_max-val_min))+0.1)^-1 for i in objv]
+        suma = sum(objv_norm)
+        key_objv = [(k,i/suma) for (k,i) in enumerate(objv_norm)]
+        objv_sort = sort(key_objv, by = x -> x[2],rev=true)
+
+    elseif operacion == "max"
+        objv_norm = [(((i-val_min)/(val_max-val_min))+0.1) for i in objv]
+        suma = sum(objv_norm)
+        key_objv = [(k,i/suma) for (k,i) in enumerate(objv_norm)]
+        objv_sort = sort(key_objv, by = x -> x[2],rev=true)
+
+    end
+
+    return objv_sort
+end
+
+# Función que selecciona a los mejores individuos
+
+function SELECCION(aptitud,tipo,n_variables,población)
+    if tipo == "ruleta"
+        n = Int(length(aptitud)/2)
+        suma_acumulada = cumsum([v for (k,v) in aptitud])
+
+        individuos_dict = Dict(i => Dict() for i in 1:n)
+
+        for pareja in 1:n
+            for individuo in 1:2
+                aleatorio = rand()
+                index_ind = findall(x->x >= aleatorio , suma_acumulada)[1]
+                cromosoma = []
+                for gen in 1:n_variables
+                    push!(cromosoma,poblacion_inicial_vec[gen][index_ind])
+                end
+                cromosoma = vcat(cromosoma...)
+                individuos_dict[pareja][individuo] = cromosoma
+            end
+        end
+    end
+
+    return individuos_dict
+end
+
+function CRUZA(seleccion,tipo,length_total_cromosoma)
+    if tipo == "unpunto"
+        n = length(seleccion)
+
+        nueva_poblacion = []
+
+        for pareja in 1:n
+            punto_cruza = Int(floor(rand(Uniform(1,length_total_cromosoma))))
+
+            primer_nuevo_individuo = vcat([seleccion[pareja][1][1:punto_cruza],seleccion[pareja][2][punto_cruza+1:length_total_cromosoma]]...)
+            segundo_nuevo_individuo = vcat([seleccion[pareja][2][1:punto_cruza],seleccion[pareja][1][punto_cruza+1:length_total_cromosoma]]...)
+
+            push!(nueva_poblacion,primer_nuevo_individuo)
+            push!(nueva_poblacion,segundo_nuevo_individuo)
+
+        end
+
+    end
+    return nueva_poblacion
+
+end
+
+function MUTACION(nueva_poblacion,length_total_cromosoma)
+
+    mutacion_param = 1/length_total_cromosoma
+    n = length(nueva_poblacion)
+
+    for individuo in 1:n
+         muta_random = rand(length_total_cromosoma)
+         muta_index = findall(x->x < mutacion_param ,muta_random)
+
+         for i in muta_index
+             nueva_poblacion[individuo][i] = !nueva_poblacion[individuo][i]
+         end
+    end
+
+    return nueva_poblacion
+end

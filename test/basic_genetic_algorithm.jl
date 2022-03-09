@@ -1,5 +1,4 @@
-include("utils.jl")
-
+include("../src/utils.jl")
 
 # Función a evaluar 1
 function ackley(X)
@@ -11,16 +10,21 @@ n_variables = 2
 i_sup_vec = [5,5]
 i_inf_vec = [-5,-5]
 precision = 4
-m = 50
+m = 60
 
 dimension_vec = []
 poblacion_inicial_vec = []
+length_total_cromosoma = 0
 
 for i in 1:n_variables
     length_cromosoma = length_variable(i_sup_vec[i],i_inf_vec[i],precision)
+    length_total_cromosoma += length_cromosoma
     push!(dimension_vec,length_cromosoma)
     push!(poblacion_inicial_vec,rand_population_binary(m, length_cromosoma))
 end
 
 feno = DECODE(n_variables,m,i_sup_vec,i_inf_vec,dimension_vec,poblacion_inicial_vec)
 objv = OBJFUN(ackley,feno)
+aptitud = APTITUD(objv,"min")
+seleccion = SELECCION(aptitud,"ruleta",2,poblacion_inicial_vec)
+nueva_poblacion = CRUZA(seleccion,"unpunto",length_total_cromosoma)
