@@ -1,4 +1,5 @@
 using Random
+using  Distributions
 
 # Genera población aleatoria binaria de m bit-string y cromosomas de tamaño n
 rand_population_binary(m, n) = [bitrand(n) for i in 1:m]
@@ -43,7 +44,7 @@ function APTITUD(objv,operacion)
     val_min = minimum(objv)
 
     if operacion == "min"
-        objv_norm = [(((i-val_min)/(val_max-val_min))+0.1)^-1 for i in objv]
+        objv_norm = [(((i-val_min)/(val_max-val_min))+0.01)^-1 for i in objv]
         suma = sum(objv_norm)
         key_objv = [(k,i/suma) for (k,i) in enumerate(objv_norm)]
         objv_sort = sort(key_objv, by = x -> x[2],rev=true)
@@ -74,7 +75,7 @@ function SELECCION(aptitud,tipo,n_variables,población)
                 index_ind = findall(x->x >= aleatorio , suma_acumulada)[1]
                 cromosoma = []
                 for gen in 1:n_variables
-                    push!(cromosoma,poblacion_inicial_vec[gen][index_ind])
+                    push!(cromosoma,población[gen][aptitud[index_ind][1]])
                 end
                 cromosoma = vcat(cromosoma...)
                 individuos_dict[pareja][individuo] = cromosoma
@@ -107,7 +108,7 @@ function CRUZA(seleccion,tipo,length_total_cromosoma)
 
 end
 
-function MUTACION(nueva_poblacion,length_total_cromosoma)
+function MUTACION(nueva_poblacion,length_total_cromosoma,n_variables,dimension_vec)
 
     mutacion_param = 1/length_total_cromosoma
     n = length(nueva_poblacion)
@@ -121,5 +122,18 @@ function MUTACION(nueva_poblacion,length_total_cromosoma)
          end
     end
 
-    return nueva_poblacion
+    inicio = 1
+    fin = 0
+    nueva_poblacion_format = []
+
+    for gen in 1:n_variables
+        nueva_poblacion_gen = []
+        fin += dimension_vec[gen]
+        for individuo in nueva_poblacion
+            push!(nueva_poblacion_gen,individuo[inicio:fin])
+        end
+        push!(nueva_poblacion_format,nueva_poblacion_gen)
+        inicio +=dimension_vec[gen]
+    end
+    return nueva_poblacion_format
 end
